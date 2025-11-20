@@ -37,11 +37,102 @@ The security of RSA relies on the difficulty of factoring large numbers; thus, c
 
 ## Program:
 
+```
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+#include <ctype.h>
+#include <stdlib.h>
 
+int gcd(int a, int b) {
+    while (b != 0) {
+        int temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}
+
+long long mod_exp(long long base, long long exp, long long mod) {
+    long long result = 1;
+    while (exp > 0) {
+        if (exp % 2 == 1)
+            result = (result * base) % mod;
+        base = (base * base) % mod;
+        exp = exp / 2;
+    }
+    return result;
+}
+
+int mod_inverse(int e, int phi) {
+    int t = 0, newt = 1;
+    int r = phi, newr = e;
+    while (newr != 0) {
+        int quotient = r / newr;
+        int temp = t;
+        t = newt;
+        newt = temp - quotient * newt;
+        temp = r;
+        r = newr;
+        newr = temp - quotient * newr;
+    }
+    if (r > 1) return -1; // e is not invertible
+    if (t < 0) t = t + phi;
+    return t;
+}
+
+int main() {
+    int p = 61;
+    int q = 53;
+    
+    int n = p * q;
+    int phi = (p - 1) * (q - 1);
+
+    int e = 17; // A commonly used public exponent
+    if (gcd(e, phi) != 1) {
+        printf("e and phi(n) are not coprime!\n");
+        return -1;
+    }
+
+    int d = mod_inverse(e, phi);
+    if (d == -1) {
+        printf("No modular inverse found for e!\n");
+        return -1;
+    }
+
+    printf("Public Key: (e = %d, n = %d)\n", e, n);
+    printf("Private Key: (d = %d, n = %d)\n", d, n);
+
+    char message[100];
+    printf("Enter a message to encrypt (alphabetic characters only): ");
+    fgets(message, sizeof(message), stdin);
+    int len = strlen(message);
+    if (message[len - 1] == '\n') message[len - 1] = '\0'; // Remove newline character
+
+    printf("\nEncrypted Message:\n");
+    long long encrypted[100];
+    for (int i = 0; i < len; i++) {
+        int m = (int)message[i];  // Convert the character to its ASCII value
+        encrypted[i] = mod_exp(m, e, n);  // Encrypt the ASCII value using RSA
+        printf("%lld ", encrypted[i]);  // Print encrypted values
+    }
+    printf("\n");
+
+    printf("\nDecrypted Message:\n");
+    for (int i = 0; i < len; i++) {
+        int decrypted = (int)mod_exp(encrypted[i], d, n);  // Decrypt the ASCII value using RSA
+        printf("%c", (char)decrypted);  // Convert the decrypted ASCII value back to a character
+    }
+    printf("\n");
+
+    return 0;
+}
+```
 
 
 ## Output:
 
+<img width="1631" height="658" alt="image" src="https://github.com/user-attachments/assets/9f6f18cd-0628-4ef0-9c22-bf43817945a4" />
 
 
 ## Result:
